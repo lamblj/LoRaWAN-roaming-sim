@@ -20,7 +20,10 @@ public EndDevices(int amount){
 
 }
 
-    private void SendData(){
+// TODO Timer functions and multiple message sending
+
+
+    private void SendData() throws InterruptedException {
         DatagramSocket  socket;
         try {
             socket = new DatagramSocket();
@@ -30,7 +33,11 @@ public EndDevices(int amount){
             DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 4445);
             System.out.println(new String(buf));
             socket.send(packet);
-            RefreshMessage(msg);
+            msg = RefreshMessage(msg);
+            buf = msg.MessageToBytes();
+            Thread.sleep(200);
+            System.out.println(new String(buf));
+            socket.send(packet);
         } catch (SocketException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -39,7 +46,7 @@ public EndDevices(int amount){
 
     }
 
-    public void Initialize(int amount, int percentRoaming){
+    public void Initialize(int amount, int percentRoaming) throws InterruptedException {
 
 
     SendData();

@@ -10,7 +10,7 @@ public class Gateway {
     private InetAddress networkServer;
     private final int nsPort = 666;
     final int MYPORT = 4445;
-
+    byte[] buf = new byte[BUFSIZE];
 
     public Gateway(String networkID){
         this.networkID = networkID;
@@ -22,11 +22,12 @@ public class Gateway {
              try {
                  /* Create Socket */
                  DatagramSocket socket = new DatagramSocket(MYPORT);
-
+                 DatagramPacket packet = new DatagramPacket(buf, buf.length);
                  /* Endless loop waiting for client connections */
                  while (true) {
                      /* Open new thread for each new client connection */
-                     new Thread(new MessageHandler(socket, networkServer)).start();
+                     socket.receive(packet);
+                     new Thread(new MessageHandler(packet, networkServer)).start();
 
                  }
 
@@ -54,11 +55,11 @@ public class Gateway {
 
 
     class MessageHandler implements Runnable {
-        private DatagramSocket connection;
+        private DatagramPacket packet;
         private InetAddress networkServer;
 
-        public MessageHandler(DatagramSocket connection, InetAddress networkServer) {
-            this.connection = connection;
+        public MessageHandler(DatagramPacket packet, InetAddress networkServer) {
+            this.packet = packet;
             this.networkServer = networkServer;
         }
 
@@ -81,20 +82,10 @@ public class Gateway {
 
 
         @Override public void run() {
-            byte[] buf = new byte[BUFSIZE];
-            DatagramPacket receivePacket = new DatagramPacket(buf, buf.length);
-            try {
-
-
-                connection.receive(receivePacket);
-                System.out.println(new String(receivePacket.getData()));
-              //  DatagramPacket forwardPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), networkServer,nsPort);
-              //  sendPacket(forwardPacket);
-
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            System.out.println(new String(packet.getData()));
+            Thread.currentThread().interrupt();
+            //  DatagramPacket forwardPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), networkServer,nsPort);
+            //  sendPacket(forwardPacket);
 
         }
     }
