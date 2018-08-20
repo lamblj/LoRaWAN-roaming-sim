@@ -2,6 +2,7 @@ package Gateway;
 
 import java.io.IOException;
 import java.net.*;
+import java.util.Arrays;
 
 public class Gateway {
 
@@ -12,35 +13,30 @@ public class Gateway {
     final int MYPORT = 4445;
     byte[] buf = new byte[BUFSIZE];
 
-    public Gateway(String networkID){
+    public Gateway(String networkID) {
         this.networkID = networkID;
     }
 
-    private void listenService() throws SocketException {
+    private void listenService(){
 
 
-             try {
-                 /* Create Socket */
-                 DatagramSocket socket = new DatagramSocket(MYPORT);
-                 DatagramPacket packet = new DatagramPacket(buf, buf.length);
-                 /* Endless loop waiting for client connections */
-                 while (true) {
-                     /* Open new thread for each new client connection */
-                     socket.receive(packet);
-                     new Thread(new MessageHandler(packet, networkServer)).start();
+        try {
+            /* Create Socket */
+            DatagramSocket socket = new DatagramSocket(MYPORT);
+            DatagramPacket packet = new DatagramPacket(buf, buf.length);
+            /* Endless loop waiting for client connections */
+            while (true) {
+                /* Open new thread for each new client connection */
+                socket.receive(packet);
 
-                 }
+                System.out.println("Packet data " + new String(packet.getData()));
+                new Thread(new MessageHandler(packet, networkServer)).start();
+                Arrays.fill(buf,(byte)0);
+            }
 
-             } catch (IOException e) {
-             }
-         }
-
-
-
-
-
-
-
+        } catch (IOException e) {
+        }
+    }
 
 
     private void EstablishEndpoint(InetAddress networkServer) {
@@ -48,7 +44,7 @@ public class Gateway {
     }
 
 
-    public void Initialize() throws SocketException, UnknownHostException {
+    public void Initialize() throws UnknownHostException {
         EstablishEndpoint(InetAddress.getByName("127.0.0.1"));
         listenService();
     }
@@ -63,26 +59,27 @@ public class Gateway {
             this.networkServer = networkServer;
         }
 
-        public void sendPacket(DatagramPacket packet){
+        public void sendPacket(DatagramPacket packet) {
             try {
-                DatagramSocket nsConnection = new DatagramSocket(nsPort);
+                DatagramSocket nsConnection = new DatagramSocket(6664);
+                packet.setAddress(networkServer);
+                packet.setPort(6665);
                 nsConnection.send(packet);
                 nsConnection.close();
-            }
-            catch (SocketException e){
-                System.out.println("No connection could be established");
+            } catch (SocketException e) {
+               e.printStackTrace();
 
-            }
-            catch (IOException e){
-             System.out.println("Packet could not be sent");
+            } catch (IOException e) {
+                System.out.println("Packet could not be sent");
             }
 
         }
 
 
-
-        @Override public void run() {
-            System.out.println(new String(packet.getData()));
+        @Override
+        public void run() {
+          //  System.out.println(new String(packet.getData()));
+            sendPacket(packet);
             Thread.currentThread().interrupt();
             //  DatagramPacket forwardPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), networkServer,nsPort);
             //  sendPacket(forwardPacket);

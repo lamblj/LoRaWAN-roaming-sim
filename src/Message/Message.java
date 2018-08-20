@@ -7,12 +7,11 @@ public class Message {
     private String netID;
 
 
-
     private String data;
 
-  public Message(String netID, String data){
-    this.netID = netID;
-    this.data = data;
+    public Message(String netID, String data) {
+        this.netID = netID;
+        this.data = data;
     }
 
 
@@ -28,7 +27,8 @@ public class Message {
         this.data = data;
     }
 
-    public byte[] MessageToBytes(){
-      return (this.netID+this.data).getBytes();
+    public byte[] MessageToBytes() {
+        return (this.netID + this.data).getBytes();
     }
+
 }
