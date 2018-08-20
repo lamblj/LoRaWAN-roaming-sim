@@ -5,8 +5,6 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.Random;
 
-import Message.Message;
-
 public class EndDevices {
     private int amount;
     private int percentRoaming;
@@ -32,14 +30,12 @@ public class EndDevices {
             Message msg = GenerateMessage();
             buf = msg.MessageToBytes();
             DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 4445);
-           // System.out.println("Your message is : " + msg.getData() + " Network ID is : " + msg.getNetID());
             System.out.println("Packet 1 " + new String(packet.getData()));
             socket.send(packet);
             msg = RefreshMessage(msg);
-           // System.out.println("Your message is : " + msg.getData() + " Network ID is : " + msg.getNetID());
             buf = msg.MessageToBytes();
             packet.setData(buf);
-            System.out.println("Packet 1 " + new String(packet.getData()));
+            System.out.println("Packet 2 " + new String(packet.getData()));
             Thread.sleep(200);
             socket.send(packet);
         } catch (SocketException e) {
@@ -50,14 +46,30 @@ public class EndDevices {
 
     }
 
-    public void Initialize(int amount, int percentRoaming) throws InterruptedException {
+    public void Initialize() throws InterruptedException {
+        int nonRoaming = (amount * percentRoaming)/100;
+        for(int i=0;i<nonRoaming;i++){
+            String text = createText(13);
+            devices.add(GenerateNonRoamingMSG(text));
 
-
+        }
+        for(int i=0;i<amount-nonRoaming;i++){
+            devices.add(GenerateMessage());
+        }
         SendData();
+        TimeController();
+    }
+
+    private Message GenerateNonRoamingMSG(String netID){
+
+        Message msg = new Message(netID, createText(13 + rando.nextInt(55)));
+
+        return msg;
     }
 
     private Message GenerateMessage() {
-        String netID = createText(12);
+        String netID = createText(13);
+
         Message message = new Message(netID, createText(13 + rando.nextInt(55)));
         return message;
     }
@@ -74,7 +86,7 @@ public class EndDevices {
     private String createText(int length) {
         StringBuffer sb = new StringBuffer();
         while (sb.length() < length) {
-            sb.append(Integer.toHexString(rando.nextInt()));
+            sb.append(Integer.toHexString(rando.nextInt(16)));
         }
         String content = sb.toString().substring(0, sb.length() - 1);
         return content;

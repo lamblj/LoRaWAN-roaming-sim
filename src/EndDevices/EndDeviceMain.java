@@ -6,7 +6,7 @@ public class EndDeviceMain {
 
         EndDevices devices = new EndDevices(50);
         try {
-            devices.Initialize(50, 40);
+            devices.Initialize();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

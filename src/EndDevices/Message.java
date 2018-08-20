@@ -1,11 +1,11 @@
-package Message;
+package EndDevices;
 
 public class Message {
 
 //The LoRa Alliance allocates a 24bits unique network identifier (NetID)
 
     private String netID;
-
+    private int messageLimit;
 
     private String data;
 

@@ -10,7 +10,7 @@ public class Gateway {
     private String networkID;
     private InetAddress networkServer;
     private final int nsPort = 666;
-    final int MYPORT = 4445;
+    private int MYPORT = 4445;
     byte[] buf = new byte[BUFSIZE];
 
     public Gateway(String networkID) {
@@ -18,8 +18,6 @@ public class Gateway {
     }
 
     private void listenService(){
-
-
         try {
             /* Create Socket */
             DatagramSocket socket = new DatagramSocket(MYPORT);
@@ -28,7 +26,6 @@ public class Gateway {
             while (true) {
                 /* Open new thread for each new client connection */
                 socket.receive(packet);
-
                 System.out.println("Packet data " + new String(packet.getData()));
                 new Thread(new MessageHandler(packet, networkServer)).start();
                 Arrays.fill(buf,(byte)0);
@@ -79,6 +76,7 @@ public class Gateway {
         @Override
         public void run() {
           //  System.out.println(new String(packet.getData()));
+
             sendPacket(packet);
             Thread.currentThread().interrupt();
             //  DatagramPacket forwardPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), networkServer,nsPort);
