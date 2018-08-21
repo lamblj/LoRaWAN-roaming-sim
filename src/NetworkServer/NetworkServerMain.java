@@ -1,15 +1,12 @@
 package NetworkServer;
 
-import java.io.IOException;
-import java.net.UnknownHostException;
 
 public class NetworkServerMain {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 
-
-            NetworkServer ns = new NetworkServer();
-            ns.Initialize();
-        }
+        NetworkServer ns = new NetworkServer("127.0.0.1");
+        ns.Initialize();
     }
+}
 

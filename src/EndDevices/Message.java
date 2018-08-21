@@ -7,11 +7,9 @@ public class Message {
     private String netID;
 
 
-
-
     private int currentMessages;
 
-    private int messageLimit = 130;
+    private int messageLimit = 5;
     private String data;
 
     public Message(String netID, String data) {

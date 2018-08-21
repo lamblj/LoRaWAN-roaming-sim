@@ -18,13 +18,13 @@ public class MultiThreadedServer {
         try {
             /* Create Socket */
             ServerSocket socket = new ServerSocket(MYPORT);
-			
-			/* Endless loop waiting for client connections */
+
+            /* Endless loop waiting for client connections */
             while (true) {
-				/* Open new thread for each new client connection */
+                /* Open new thread for each new client connection */
                 new Thread(new ConnectionHandler(socket.accept())).start();
-				
-				/* Print out to investigate open threads */
+
+                /* Print out to investigate open threads */
                 printThreadsInfo();
             }
         } catch (IOException e) {
@@ -53,7 +53,7 @@ public class MultiThreadedServer {
         @Override
         public void run() {
 
-            
+
         }
 
     }

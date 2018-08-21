@@ -2,20 +2,18 @@ package EndDevices;
 
 import java.io.IOException;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 public class EndDevices {
     private int amount;
     private int percentRoaming;
     private Random rando = new Random();
-    private byte[] buf;
+    private final int BUFSIZE = 1024;
     private InetAddress address;
     private int port;
-    private final int BUFSIZE = 1024;
+    private byte[] buf = new byte[BUFSIZE];
     private ArrayList<Message> devices = new ArrayList<Message>();
+
     public EndDevices(int amount, String ip, int port, int percentRoaming) throws UnknownHostException {
         this.amount = amount;
         this.percentRoaming = percentRoaming;
@@ -27,26 +25,30 @@ public class EndDevices {
     public void Initialize() {
 
         int nonRoaming = (amount * percentRoaming) / 100;
-        for (int i = 0; i < nonRoaming; i++) {
-            String text = createText(13);
-            devices.add(GenerateNonRoamingMSG(text));
+      //  for (int i = 0; i < nonRoaming; i++) {
 
-        }
-        for (int i = 0; i < amount - nonRoaming; i++) {
-            devices.add(GenerateMessage());
-        }
 
-        for(int i=0;i<amount;i++){
-        new MessageHandler(devices.get(i)).run();
-        }
+       // }
+
+     //   for (int i = 0; i < amount - nonRoaming; i++) {
+          //  devices.add(GenerateMessage());
+      //  }
+        Collections.shuffle(devices);
+        String text = "bbc20180820K";
+        devices.add(GenerateNonRoamingMSG(text));
+        new MessageHandler(devices.get(0)).run();
+      //  for (int i = 0; i < devices.size(); i++) {
+
+      //  }
+
+
     }
 
     class MessageHandler extends TimerTask {
-    private Message msg ;
+        private Message msg;
 
         public MessageHandler(Message msg) {
             this.msg = msg;
-            SendData(msg);
             this.msg = RefreshMessage(msg);
         }
 
@@ -54,30 +56,34 @@ public class EndDevices {
         @Override
         public void run() {
             Timer timer = new Timer();
-            if(msg.getCurrentMessages() >= msg.getMessageLimit()){
-
-            }
-            else {
-                timer.schedule(new MessageHandler(this.msg), 240 + new Random().nextInt(2800) * 1000);
-                System.out.println(msg.getNetID() + " Packet  " + msg.getCurrentMessages());
-                System.out.println("Messages sent: " + msg.getCurrentMessages());
+            if (msg.getCurrentMessages() >= msg.getMessageLimit()) {
+                System.out.println("Hard limit of messages reached");
+                Thread.currentThread().interrupt();
+            } else {
+                SendData(msg);
+                timer.schedule(new MessageHandler(this.msg), 240 + new Random().nextInt(2800) * 2);
                 Thread.currentThread().interrupt();
 
             }
         }
 
 
-        private void SendData(Message msg){
+        private void SendData(Message msg) {
             DatagramSocket socket;
             try {
                 socket = new DatagramSocket();
+                System.out.println(msg.getNetID() + msg.getData());
                 buf = msg.MessageToBytes();
                 DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
                 socket.send(packet);
-                msg.setCurrentMessages(msg.getCurrentMessages()+1);
+                msg.setCurrentMessages(msg.getCurrentMessages() + 1);
+                msg = RefreshMessage(msg);
+                Thread.sleep(500);
             } catch (SocketException e) {
                 e.printStackTrace();
             } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
@@ -86,11 +92,9 @@ public class EndDevices {
     }
 
 
-
     private Message GenerateNonRoamingMSG(String netID) {
 
         Message msg = new Message(netID, createText(13 + rando.nextInt(55)));
-
         return msg;
     }
 
@@ -101,14 +105,13 @@ public class EndDevices {
         return message;
     }
 
-
     private Message RefreshMessage(Message message) {
         message.setData(createText(13 + rando.nextInt(55)));
         return message;
 
 
     }
-    
+
     private String createText(int length) {
         StringBuffer sb = new StringBuffer();
         while (sb.length() < length) {
