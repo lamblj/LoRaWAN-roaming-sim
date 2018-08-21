@@ -32,7 +32,7 @@ public class EndDevices {
         }
 
        for (int i = 0; i < amount - nonRoaming; i++) {
-          //  devices.add(GenerateMessage());
+            devices.add(GenerateMessage());
         }
         Collections.shuffle(devices);
 
@@ -78,12 +78,9 @@ public class EndDevices {
                 socket.send(packet);
                 msg.setCurrentMessages(msg.getCurrentMessages() + 1);
                 msg = RefreshMessage(msg);
-                Thread.sleep(500);
             } catch (SocketException e) {
                 e.printStackTrace();
             } catch (IOException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 

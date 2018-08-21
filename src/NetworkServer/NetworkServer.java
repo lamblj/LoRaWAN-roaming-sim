@@ -9,7 +9,7 @@ public class NetworkServer {
     private int listenport = 6665;
     private int DSport = 3001;
     private String networkID;
-    private byte[] buf = new byte[BUFSIZE];
+    private byte[] buf;
     private String ipAddress;
 
     public NetworkServer(String ipAddress, String networkID) {
@@ -86,6 +86,7 @@ public class NetworkServer {
                 try {
 
                     String dsFormat ="ndat " + (new String(packet.getData()));
+                    System.out.println("Packet data : " +dsFormat);
                     packet.setData(dsFormat.getBytes());
                     packet.setPort(DSport);
                     packet.setAddress(distributionServer);
