@@ -13,33 +13,33 @@ public class EndDevices {
     private int port;
     private byte[] buf = new byte[BUFSIZE];
     private ArrayList<Message> devices = new ArrayList<Message>();
-
-    public EndDevices(int amount, String ip, int port, int percentRoaming) throws UnknownHostException {
+    private String networkId;
+    public EndDevices(int amount, String ip, int port, int percentRoaming, String networkId) throws UnknownHostException {
         this.amount = amount;
         this.percentRoaming = percentRoaming;
         this.address = InetAddress.getByName(ip);
         this.port = port;
+        this.networkId = networkId;
     }
 
 
     public void Initialize() {
 
         int nonRoaming = (amount * percentRoaming) / 100;
-      //  for (int i = 0; i < nonRoaming; i++) {
+       for (int i = 0; i < nonRoaming; i++) {
+        devices.add(GenerateNonRoamingMSG(networkId));
 
+        }
 
-       // }
-
-     //   for (int i = 0; i < amount - nonRoaming; i++) {
+       for (int i = 0; i < amount - nonRoaming; i++) {
           //  devices.add(GenerateMessage());
-      //  }
+        }
         Collections.shuffle(devices);
-        String text = "bbc20180820m";
-        devices.add(GenerateNonRoamingMSG(text));
-        new MessageHandler(devices.get(0)).run();
-      //  for (int i = 0; i < devices.size(); i++) {
 
-      //  }
+
+       for (int i = 0; i < devices.size(); i++) {
+           new MessageHandler(devices.get(i)).run();
+       }
 
 
     }

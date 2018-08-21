@@ -2,18 +2,18 @@ package NetworkServer;
 
 import java.io.IOException;
 import java.net.*;
-import java.util.Arrays;
 
 public class NetworkServer {
 
     private final int BUFSIZE = 1024;
     private int listenport = 6665;
     private int DSport = 3001;
-    private String networkID = "bbc20180820K";
+    private String networkID;
     private byte[] buf = new byte[BUFSIZE];
     private String ipAddress;
 
-    public NetworkServer(String ipAddress) {
+    public NetworkServer(String ipAddress, String networkID) {
+        this.networkID = networkID;
         this.ipAddress = ipAddress;
 
     }
@@ -22,11 +22,11 @@ public class NetworkServer {
 
 
     private void listenService() throws IOException {
-        InetAddress distributionServer = InetAddress.getByName(ipAddress);
+
         /* Create Socket */
         DatagramSocket socket = new DatagramSocket(listenport);
         byte[] buf = ("nctr " + "start " + networkID).getBytes();
-        DatagramPacket packet = new DatagramPacket(buf, buf.length, distributionServer, DSport);
+        DatagramPacket packet = new DatagramPacket(buf, buf.length, InetAddress.getByName(ipAddress), DSport);
         System.out.println("Listening for incoming connections");
         socket.send(packet);
 
@@ -37,7 +37,7 @@ public class NetworkServer {
             packet = new DatagramPacket(buf,buf.length);
             /* Open new thread for each new client connection */
             socket.receive(packet);
-            new Thread(new MessageHandler(packet, distributionServer, networkID,socket)).start();
+            new Thread(new MessageHandler(packet, InetAddress.getByName(ipAddress), networkID,socket)).start();
         }
 
 
@@ -86,7 +86,7 @@ public class NetworkServer {
                 try {
 
                     String dsFormat ="ndat " + (new String(packet.getData()));
-                    System.out.println(dsFormat);
+                    packet.setData(dsFormat.getBytes());
                     packet.setPort(DSport);
                     packet.setAddress(distributionServer);
                     socket.send(packet);
