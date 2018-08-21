@@ -25,17 +25,20 @@ public class NetworkServer {
         InetAddress distributionServer = InetAddress.getByName(ipAddress);
         /* Create Socket */
         DatagramSocket socket = new DatagramSocket(listenport);
-        byte[] tempBuf = ("nctr " + "Start " + networkID).getBytes();
-        DatagramPacket packet = new DatagramPacket(tempBuf, tempBuf.length, distributionServer, DSport);
+        byte[] buf = ("nctr " + "start " + networkID).getBytes();
+        DatagramPacket packet = new DatagramPacket(buf, buf.length, distributionServer, DSport);
         System.out.println("Listening for incoming connections");
         socket.send(packet);
+        buf = new byte[BUFSIZE];
         packet = new DatagramPacket(buf,buf.length,distributionServer,listenport);
-        Arrays.fill(buf, (byte) 0);
+
+
         /* Endless loop waiting for client connections */
         while (true) {
             /* Open new thread for each new client connection */
             socket.receive(packet);
-            new Thread(new MessageHandler(packet, distributionServer, networkID)).start();
+
+            new Thread(new MessageHandler(packet, distributionServer, networkID,socket)).start();
             Arrays.fill(buf, (byte) 0);
         }
 
@@ -55,17 +58,19 @@ public class NetworkServer {
         private DatagramPacket packet;
         private InetAddress distributionServer;
         private String networkID;
-
-        public MessageHandler(DatagramPacket packet, InetAddress distributionServer, String networkID) {
+        private DatagramSocket socket;
+        public MessageHandler(DatagramPacket packet, InetAddress distributionServer, String networkID, DatagramSocket socket) {
             this.packet = packet;
             this.distributionServer = distributionServer;
             this.networkID = networkID;
+            this.socket = socket;
+          //  System.out.println("Received packet data: " + new String(packet.getData()));
         }
 
 
         private boolean isLocal(String networkID) {
 
-            if (this.networkID == networkID) {
+            if (this.networkID.equals(networkID) ) {
                 return true;
             } else {
                 return false;
@@ -74,19 +79,23 @@ public class NetworkServer {
 
         public void Handle(DatagramPacket packet) {
             //    try {
-            // DatagramSocket DSConnection = new DatagramSocket(666);
             if (isLocal(new String(packet.getData()).substring(0, 12)) ) {
                   System.out.println("Packet was not roaming, therefore it is not sent forwards");
             }
             else {
-                System.out.println(new String(packet.getData()).substring(0, 12));
-                String dsFormat = "NSDAT " + new String(packet.getData());
-                System.out.println(dsFormat);
-                packet.setPort(DSport);
-                packet.setAddress(distributionServer);
-                // System.out.println("Packet sent,but no DS");
-                // DSConnection.send(packet);
-                Thread.currentThread().interrupt();
+
+                try {
+
+                    String dsFormat = "ndat " + new String(packet.getData());
+                    System.out.println(dsFormat);
+                    packet.setPort(DSport);
+                    packet.setAddress(distributionServer);
+                    socket.send(packet);
+                    Thread.currentThread().interrupt();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
             }
 
             //} //catch (SocketException e) {
@@ -101,8 +110,7 @@ public class NetworkServer {
 
         @Override
         public void run() {
-            Handle(packet);
-            Thread.currentThread().interrupt();
+            Handle(this.packet);
             //  DatagramPacket forwardPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), networkServer,nsPort);
             //  sendPacket(forwardPacket);
 

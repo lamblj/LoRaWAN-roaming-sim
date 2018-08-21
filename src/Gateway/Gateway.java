@@ -52,9 +52,9 @@ public class Gateway {
 
         public  void sendPacket(DatagramPacket packet) {
             try {
-
-                packet.setAddress(networkServer);
-                packet.setPort(sendPort);
+                DatagramPacket sendPacket = packet;
+                sendPacket.setAddress(networkServer);
+                sendPacket.setPort(sendPort);
                 gateway.send(packet);
             } catch (SocketException e) {
                 e.printStackTrace();

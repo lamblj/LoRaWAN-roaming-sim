@@ -34,7 +34,7 @@ public class EndDevices {
           //  devices.add(GenerateMessage());
       //  }
         Collections.shuffle(devices);
-        String text = "bbc20180820K";
+        String text = "bbc20180820m";
         devices.add(GenerateNonRoamingMSG(text));
         new MessageHandler(devices.get(0)).run();
       //  for (int i = 0; i < devices.size(); i++) {
@@ -61,7 +61,7 @@ public class EndDevices {
                 Thread.currentThread().interrupt();
             } else {
                 SendData(msg);
-                timer.schedule(new MessageHandler(this.msg), 240 + new Random().nextInt(2800) * 2);
+                timer.schedule(new MessageHandler(this.msg), 2400 + new Random().nextInt(10) * 1);
                 Thread.currentThread().interrupt();
 
             }
