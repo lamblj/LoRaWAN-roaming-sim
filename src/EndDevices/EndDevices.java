@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class EndDevices {
     private int amount;
@@ -11,56 +13,81 @@ public class EndDevices {
     private Random rando = new Random();
     private byte[] buf;
     private InetAddress address;
-    private ArrayList<Message> devices = new ArrayList<Message>();
+    private int port;
     private final int BUFSIZE = 1024;
-    public EndDevices(int amount) {
+    private ArrayList<Message> devices = new ArrayList<Message>();
+    public EndDevices(int amount, String ip, int port, int percentRoaming) throws UnknownHostException {
         this.amount = amount;
-        this.percentRoaming = 40;
-
+        this.percentRoaming = percentRoaming;
+        this.address = InetAddress.getByName(ip);
+        this.port = port;
     }
 
-// TODO Timer functions and multiple message sending
 
+    public void Initialize() {
 
-    private void SendData() throws InterruptedException {
-        DatagramSocket socket;
-        try {
-            socket = new DatagramSocket();
-            address = InetAddress.getByName("localhost");
-            Message msg = GenerateMessage();
-            buf = msg.MessageToBytes();
-            DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 4445);
-            System.out.println("Packet 1 " + new String(packet.getData()));
-            socket.send(packet);
-            msg = RefreshMessage(msg);
-            buf = msg.MessageToBytes();
-            packet.setData(buf);
-            System.out.println("Packet 2 " + new String(packet.getData()));
-            Thread.sleep(200);
-            socket.send(packet);
-        } catch (SocketException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    public void Initialize() throws InterruptedException {
-        int nonRoaming = (amount * percentRoaming)/100;
-        for(int i=0;i<nonRoaming;i++){
+        int nonRoaming = (amount * percentRoaming) / 100;
+        for (int i = 0; i < nonRoaming; i++) {
             String text = createText(13);
             devices.add(GenerateNonRoamingMSG(text));
 
         }
-        for(int i=0;i<amount-nonRoaming;i++){
+        for (int i = 0; i < amount - nonRoaming; i++) {
             devices.add(GenerateMessage());
         }
-        SendData();
-        TimeController();
+
+        for(int i=0;i<amount;i++){
+        new MessageHandler(devices.get(i)).run();
+        }
     }
 
-    private Message GenerateNonRoamingMSG(String netID){
+    class MessageHandler extends TimerTask {
+    private Message msg ;
+
+        public MessageHandler(Message msg) {
+            this.msg = msg;
+            SendData(msg);
+            this.msg = RefreshMessage(msg);
+        }
+
+
+        @Override
+        public void run() {
+            Timer timer = new Timer();
+            if(msg.getCurrentMessages() >= msg.getMessageLimit()){
+
+            }
+            else {
+                timer.schedule(new MessageHandler(this.msg), 240 + new Random().nextInt(2800) * 1000);
+                System.out.println(msg.getNetID() + " Packet  " + msg.getCurrentMessages());
+                System.out.println("Messages sent: " + msg.getCurrentMessages());
+                Thread.currentThread().interrupt();
+
+            }
+        }
+
+
+        private void SendData(Message msg){
+            DatagramSocket socket;
+            try {
+                socket = new DatagramSocket();
+                buf = msg.MessageToBytes();
+                DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
+                socket.send(packet);
+                msg.setCurrentMessages(msg.getCurrentMessages()+1);
+            } catch (SocketException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+    }
+
+
+
+    private Message GenerateNonRoamingMSG(String netID) {
 
         Message msg = new Message(netID, createText(13 + rando.nextInt(55)));
 
@@ -81,8 +108,7 @@ public class EndDevices {
 
 
     }
-
-
+    
     private String createText(int length) {
         StringBuffer sb = new StringBuffer();
         while (sb.length() < length) {
@@ -91,13 +117,14 @@ public class EndDevices {
         String content = sb.toString().substring(0, sb.length() - 1);
         return content;
     }
-
-    // To Do
-    private boolean TimeController() {
-
-        return false;
-    }
 }
+
+
+
+
+
+
+
 
 
 

@@ -31,8 +31,8 @@ public class NetworkServer {
 
             /* Create Socket */
         DatagramSocket socket = new DatagramSocket(listenport);
-        byte[] tempBuf = ("NSCTR " + "Start " + networkID).getBytes();
-        DatagramPacket packet = new  DatagramPacket(tempBuf, tempBuf.length, distributionServer, listenport);
+        byte[] tempBuf = ("nctr " + "Start " + networkID).getBytes();
+        DatagramPacket packet = new  DatagramPacket(tempBuf, tempBuf.length, distributionServer, 3001);
         System.out.println("Listening for incoming connections");
         System.out.println(new String(packet.getData()));
         socket.send(packet);
@@ -56,7 +56,6 @@ public class NetworkServer {
     public void Initialize() throws IOException {
         listenService();
     }
-
 
     class MessageHandler implements Runnable {
         private DatagramPacket packet;
@@ -88,7 +87,8 @@ public class NetworkServer {
 
                 else {
                     System.out.println("Handling packet  " + new String(packet.getData()));
-                    packet.setPort(listenport);
+                    packet.getData();
+                    packet.setPort(3001);
                     packet.setAddress(distributionServer);
                    // System.out.println("Packet sent,but no DS");
                    // DSConnection.send(packet);

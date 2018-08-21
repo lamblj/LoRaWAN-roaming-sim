@@ -5,8 +5,13 @@ public class Message {
 //The LoRa Alliance allocates a 24bits unique network identifier (NetID)
 
     private String netID;
-    private int messageLimit;
 
+
+
+
+    private int currentMessages;
+
+    private int messageLimit = 130;
     private String data;
 
     public Message(String netID, String data) {
@@ -14,6 +19,17 @@ public class Message {
         this.data = data;
     }
 
+    public int getCurrentMessages() {
+        return currentMessages;
+    }
+
+    public void setCurrentMessages(int currentMessages) {
+        this.currentMessages = currentMessages;
+    }
+
+    public int getMessageLimit() {
+        return messageLimit;
+    }
 
     public String getNetID() {
         return netID;
