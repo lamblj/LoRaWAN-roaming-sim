@@ -29,17 +29,15 @@ public class NetworkServer {
         DatagramPacket packet = new DatagramPacket(buf, buf.length, distributionServer, DSport);
         System.out.println("Listening for incoming connections");
         socket.send(packet);
-        buf = new byte[BUFSIZE];
-        packet = new DatagramPacket(buf,buf.length,distributionServer,listenport);
 
 
         /* Endless loop waiting for client connections */
         while (true) {
+            buf = new byte[BUFSIZE];
+            packet = new DatagramPacket(buf,buf.length);
             /* Open new thread for each new client connection */
             socket.receive(packet);
-
             new Thread(new MessageHandler(packet, distributionServer, networkID,socket)).start();
-            Arrays.fill(buf, (byte) 0);
         }
 
 
@@ -59,6 +57,7 @@ public class NetworkServer {
         private InetAddress distributionServer;
         private String networkID;
         private DatagramSocket socket;
+
         public MessageHandler(DatagramPacket packet, InetAddress distributionServer, String networkID, DatagramSocket socket) {
             this.packet = packet;
             this.distributionServer = distributionServer;
@@ -86,7 +85,7 @@ public class NetworkServer {
 
                 try {
 
-                    String dsFormat = "ndat " + new String(packet.getData());
+                    String dsFormat ="ndat " + (new String(packet.getData()));
                     System.out.println(dsFormat);
                     packet.setPort(DSport);
                     packet.setAddress(distributionServer);
@@ -107,10 +106,9 @@ public class NetworkServer {
 
         }
 
-
         @Override
         public void run() {
-            Handle(this.packet);
+            Handle(packet);
             //  DatagramPacket forwardPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), networkServer,nsPort);
             //  sendPacket(forwardPacket);
 
