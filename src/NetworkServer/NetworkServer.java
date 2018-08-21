@@ -24,11 +24,25 @@ public class NetworkServer {
     private void listenService() throws IOException {
 
         /* Create Socket */
+        // send roaming start request to DS
         DatagramSocket socket = new DatagramSocket(listenport);
         byte[] buf = ("nctr " + "start " + networkID).getBytes();
         DatagramPacket packet = new DatagramPacket(buf, buf.length, InetAddress.getByName(ipAddress), DSport);
-        System.out.println("Listening for incoming connections");
         socket.send(packet);
+        // try to get confirm from DS
+        buf = new byte[1024];
+        packet = new DatagramPacket(buf, buf.length);
+        socket.receive(packet);
+        String confirm = new String(packet.getData()).trim().split(" ")[1];
+        System.out.println(confirm);
+        if (confirm.equals("deny")) {
+            return;
+        }
+        else if (confirm.equals("allow")) {
+            System.out.println("DS allows roaming");
+        }
+        System.out.println("Listening for incoming connections");
+
 
 
         /* Endless loop waiting for client connections */

@@ -42,7 +42,7 @@ public class Message {
     }
 
     public byte[] MessageToBytes() {
-        return (this.netID + this.data).getBytes();
+        return (this.netID + " " + this.data).getBytes();
     }
 
 }

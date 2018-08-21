@@ -34,15 +34,13 @@ public class MessageHandler implements Runnable {
         DatabaseConnector dbc = new DatabaseConnector();
 
         // extract NetID
-        String NetID = "";
-        // todo: fix with Tadas
+        String NetID = receivePacket.getData().toString().split(" ")[1];
         // lookup NetID in database
         String IP = dbc.lookupNSIPaddr(NetID);
         // forward message to matched IP
         try {
             DatagramSocket sendSocket = new DatagramSocket();
-            DatagramPacket sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), InetAddress.getByAddress(IP.getBytes()), 666);
-            // todo: fix with Tadas which port NSs listen on
+            DatagramPacket sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), InetAddress.getByAddress(IP.getBytes()), 6665);
             sendSocket.send(sendPacket);
         } catch (SocketException e) {
             e.printStackTrace();
@@ -64,7 +62,18 @@ public class MessageHandler implements Runnable {
             String NSIPaddr = receivePacket.getAddress().toString().substring(1);
             dbc.saveNSregistration(NetID, NSIPaddr);
             System.out.println("NS with ID " + NetID + ", and IP address " + NSIPaddr + " registered for roaming.");
-            // todo: send confirm
+
+            // send confirm
+            try {
+                DatagramSocket sendSocket = new DatagramSocket();
+                byte[] buf = "nctr allow".getBytes();
+                DatagramPacket sendPacket = new DatagramPacket(buf, buf.length, receivePacket.getAddress(), receivePacket.getPort());
+                sendSocket.send(sendPacket);
+            } catch (SocketException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         else if (cmd.equals("stop")) {
             dbc.deleteNSregistration(NetID);
