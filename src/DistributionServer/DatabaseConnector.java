@@ -39,9 +39,6 @@ public class DatabaseConnector {
             else if (!tables.contains("DSregistrations")) {
                 createTableDSregistrations();
             }
-            else {
-//                System.out.println("Database already initiated");
-            }
         }catch(SQLException e) {
             e.printStackTrace();
             return;
@@ -69,7 +66,7 @@ public class DatabaseConnector {
         }
     }
 
-    public void deleteNSregistration (String NetID) {
+    public void deleteNSregistration(String NetID) {
         query = "DELETE from NSregistrations WHERE NSNetID = '" + NetID + "';";
         try {
             statement.executeUpdate(query);
@@ -89,5 +86,55 @@ public class DatabaseConnector {
             e.printStackTrace();
         }
         return IP;
+    }
+
+    public void saveDSregistration(String DSIP) {
+        query = "INSERT INTO DSregistrations (DSIPaddr) values ('" + DSIP + "');";
+        try {
+            statement.executeUpdate(query);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void deleteDSregistration(String DSIP) {
+        query = "DELETE from DSregistrations WHERE DSIPaddr = '" + DSIP + "';";
+        try {
+            statement.executeUpdate(query);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void updateRegisteredNSbyDS(String DSIP, List<String>NSIPs) {
+
+        // retrieve the internal ID of the DS that sent the update
+        query = "SELECT DSiID FROM DSregistrations WHERE DSIPaddr = '" + DSIP + "';";
+        String iID = "";
+        try {
+            ResultSet rs = statement.executeQuery(query);
+            rs.next();
+            iID = rs.getString(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // delete every currently registered NS associated with the DS
+        query = "DELETE from DSservedNSs WHERE DSiID = '" + iID + "';";
+        try {
+            statement.executeUpdate(query);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // add every IP as registered with the DS
+        for (String NSIP : NSIPs) {
+            query = "INSERT INTO DSservedNSs (DSiID, NSIPaddr) values ('" + iID + "', '" + NSIP + "');";
+            try {
+                statement.executeUpdate(query);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
