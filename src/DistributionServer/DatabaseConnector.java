@@ -83,7 +83,9 @@ public class DatabaseConnector {
             rs.next();
             IP = rs.getString(1);
         } catch (SQLException e) {
-            e.printStackTrace();
+            if(e.getMessage().equals("ResultSet closed")) {
+                IP = "error";
+            }
         }
         return IP;
     }

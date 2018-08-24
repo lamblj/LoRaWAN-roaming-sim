@@ -27,10 +27,8 @@ public class DistributionServer {
         // set up DS-to-DS collaboration
         String ans = "";
         Scanner scanner = new Scanner(System.in);
-        while (!ans.equals("y") || !ans.equals("n")) {
-            System.out.println("Should the server initiate collaboration with another DS? (y/n)");
-            ans = scanner.next();
-        }
+        System.out.println("Should the server initiate collaboration with another DS? (y/n)");
+        ans = scanner.next();
         if (ans.equals("y")) {
             // collect IP of collaborating DS from user
             System.out.println("Provide IP address of other DS: ");
@@ -68,6 +66,12 @@ public class DistributionServer {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+        else if (ans.equals("n")) {
+            System.out.println("Continuing without setting up collaboration");
+        }
+        else {
+            System.out.println("Invalid response, continuing without setting up collaboration");
         }
 
         System.out.println("Distribution Server good to go");
