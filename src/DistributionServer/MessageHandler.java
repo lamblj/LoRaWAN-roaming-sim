@@ -89,6 +89,8 @@ public class MessageHandler implements Runnable {
         // extract NetID
         String NetID = receivePacket.getData().toString().split(" ")[1];
         // check if the target NS is served here
+        String IP = dbc.lookupNSIPaddr(NetID);
+        System.out.println(IP);
         // forward to it if yes
         // check if a collaborating DS is serving the target NS
         // forward to that DS if found
