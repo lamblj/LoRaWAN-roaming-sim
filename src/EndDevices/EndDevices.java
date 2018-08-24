@@ -14,12 +14,14 @@ public class EndDevices {
     private byte[] buf = new byte[BUFSIZE];
     private ArrayList<Message> devices = new ArrayList<Message>();
     private String networkId;
-    public EndDevices(int amount, String ip, int port, int percentRoaming, String networkId) throws UnknownHostException {
+    private String roamingNetworkID;
+    public EndDevices(int amount, String ip, int port, int percentRoaming, String networkId, String roamingNetworkID) throws UnknownHostException {
         this.amount = amount;
         this.percentRoaming = percentRoaming;
         this.address = InetAddress.getByName(ip);
         this.port = port;
         this.networkId = networkId;
+        this.roamingNetworkID = roamingNetworkID;
     }
 
 
@@ -32,7 +34,7 @@ public class EndDevices {
         }
 
        for (int i = 0; i < amount - nonRoaming; i++) {
-            devices.add(GenerateMessage());
+            devices.add(GenerateMessage(roamingNetworkID));
         }
         Collections.shuffle(devices);
 
@@ -61,7 +63,16 @@ public class EndDevices {
                 Thread.currentThread().interrupt();
             } else {
                 SendData(msg);
-                timer.schedule(new MessageHandler(this.msg), 2400 + new Random().nextInt(10) * 1);
+                int delay = 95;
+                int msglength =  msg.getData().length();
+               if(msglength <12){
+                    delay = 35;
+                }
+               else if (msglength > 12 && msglength <35){
+                   delay = 53;
+               }
+
+                timer.schedule(new MessageHandler(this.msg), delay + new Random().nextInt(40) * 1000);
                 Thread.currentThread().interrupt();
 
             }
@@ -91,19 +102,19 @@ public class EndDevices {
 
     private Message GenerateNonRoamingMSG(String netID) {
 
-        Message msg = new Message(netID, createText(13 + rando.nextInt(55)));
+        Message msg = new Message(netID, createText(rando.nextInt(50)));
         return msg;
     }
 
-    private Message GenerateMessage() {
-        String netID = createText(13);
+    private Message GenerateMessage(String roamingNetworkID) {
+        String netID = roamingNetworkID;
 
-        Message message = new Message(netID, createText(13 + rando.nextInt(55)));
+        Message message = new Message(netID, createText(rando.nextInt(50)));
         return message;
     }
 
     private Message RefreshMessage(Message message) {
-        message.setData(createText(13 + rando.nextInt(55)));
+        message.setData(createText(rando.nextInt(50)));
         return message;
 
 

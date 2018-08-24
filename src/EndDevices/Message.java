@@ -9,12 +9,14 @@ public class Message {
 
     private int currentMessages;
 
-    private int messageLimit = 5;
+    private int messageLimit = 70 ;
     private String data;
+    private int timer;
 
     public Message(String netID, String data) {
         this.netID = netID;
         this.data = data;
+        this.timer = data.getBytes().length;
     }
 
     public int getCurrentMessages() {

@@ -77,7 +77,7 @@ public class NetworkServer {
             this.distributionServer = distributionServer;
             this.networkID = networkID;
             this.socket = socket;
-          //  System.out.println("Received packet data: " + new String(packet.getData()));
+            System.out.println("Received packet data: " + new String(packet.getData()));
         }
 
 
@@ -96,7 +96,6 @@ public class NetworkServer {
                   System.out.println("Packet was not roaming, therefore it is not sent forwards");
             }
             else {
-
                 try {
 
                     String dsFormat ="ndat " + (new String(packet.getData()));
