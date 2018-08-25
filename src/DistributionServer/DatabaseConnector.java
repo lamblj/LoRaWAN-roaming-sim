@@ -23,7 +23,6 @@ public class DatabaseConnector {
             // connect to database
             String url = "jdbc:sqlite:DSdatabase.db";
             dbConnection = DriverManager.getConnection(url);
-            System.out.println("Successfully connected to the database");
             // check if the tables we need exist in the DB
             query = "SELECT name FROM sqlite_master WHERE type='table'";
             statement  = dbConnection.createStatement();
@@ -36,9 +35,14 @@ public class DatabaseConnector {
             if (!tables.contains("NSregistrations")) {
                 createTableNSregistrations();
             }
-            else if (!tables.contains("DSregistrations")) {
+            if (!tables.contains("DSregistrations")) {
                 createTableDSregistrations();
             }
+            if (!tables.contains("DSservedNSs")) {
+                createTableDSservedNSs();
+            }
+            query = "PRAGMA foreign_keys = ON;";
+            statement.executeUpdate(query);
         }catch(SQLException e) {
             e.printStackTrace();
             return;
@@ -46,15 +50,18 @@ public class DatabaseConnector {
     }
 
     private void createTableNSregistrations() throws SQLException {
-        query = "CREATE TABLE NSregistrations (NSNetID TEXT PRIMARY KEY, NSIPaddr TEXT)";
-        statement.executeQuery(query);
-//        System.out.println("NSregistrations table created");
+        query = "CREATE TABLE NSregistrations (NSNetID TEXT (12) PRIMARY KEY, NSIPaddr TEXT (15))";
+        statement.executeUpdate(query);
     }
 
     private void createTableDSregistrations() throws SQLException {
-        query ="CREATE TABLE DSregistrations (NSservedIPaddr TEXT PRIMARY KEY, DSIPaddr TEXT)";
-        statement.executeQuery(query);
-//        System.out.println("DSregistrations table created");
+        query = "CREATE TABLE DSregistrations (DSiID INTEGER PRIMARY KEY, DSIPaddr TEXT (15))";
+        statement.executeUpdate(query);
+    }
+
+    private void createTableDSservedNSs() throws SQLException {
+        query = "CREATE TABLE DSservedNSs (DSiID INTEGER REFERENCES DSregistrations (DSiID) ON DELETE CASCADE ON UPDATE CASCADE, NetIDserved TEXT (12));";
+        statement.executeUpdate(query);
     }
 
     public void saveNSregistration(String NetID, String IP) {
@@ -77,16 +84,13 @@ public class DatabaseConnector {
 
     public String lookupNSIPaddr(String NetID) {
         query = "SELECT NSIPaddr FROM NSregistrations WHERE NSNetID = '" + NetID + "';";
-        String IP = "";
+        String IP = "error";
         try {
             ResultSet rs = statement.executeQuery(query);
             rs.next();
             IP = rs.getString(1);
         } catch (SQLException e) {
-            if(e.getMessage().equals("ResultSet closed")) {
-                System.out.println("error");
-                IP = "error";
-            }
+
         }
         return IP;
     }
@@ -109,7 +113,7 @@ public class DatabaseConnector {
         }
     }
 
-    public void updateRegisteredNSbyDS(String DSIP, List<String>NSIPs) {
+    public void updateRegisteredNSbyDS(String DSIP, List<String>NetIDs) {
 
         // retrieve the internal ID of the DS that sent the update
         query = "SELECT DSiID FROM DSregistrations WHERE DSIPaddr = '" + DSIP + "';";
@@ -130,9 +134,9 @@ public class DatabaseConnector {
             e.printStackTrace();
         }
 
-        // add every IP as registered with the DS
-        for (String NSIP : NSIPs) {
-            query = "INSERT INTO DSservedNSs (DSiID, NSIPaddr) values ('" + iID + "', '" + NSIP + "');";
+        // add every NetID as registered with the DS
+        for (String NetID : NetIDs) {
+            query = "INSERT INTO DSservedNSs (DSiID, NetIDserved) values ('" + iID + "', '" + NetID + "');";
             try {
                 statement.executeUpdate(query);
             } catch (SQLException e) {
@@ -141,11 +145,19 @@ public class DatabaseConnector {
         }
     }
 
-    // searches in the DB for the DS serving a specific NS
-    // if an appropriate DS is found, this returns the DS's IP address
+    // searches in the database for a specific NetworkServer to see
+    // if this DistributionServer is serving it.
+    // this function returns the IP address of the DistributionServer if found, or "error" if not
     public String lookupDSservingNetID(String NetID) {
         String DSIPaddr = "error";
+        query = "select DSservedNSs.NetIDserved, DSregistrations.DSIPaddr from DSservedNSs, DSregistrations where DSservedNSs.DSiID=DSregistrations.DSiID and NetIDserved='" + NetID + "'";
+        try {
+            ResultSet rs = statement.executeQuery(query);
+            rs.next();
+            DSIPaddr = rs.getString(1);
+        } catch (SQLException e) {
 
+        }
         return DSIPaddr;
     }
 }

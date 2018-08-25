@@ -61,14 +61,13 @@ public class MessageHandler implements Runnable {
         else {
             // neither start nor stop, error
         }
-
-        // todo: send update to collaborating DSs
+        // send update to collaborating DSs in DINF format
+        sendDINF();
 
     }
 
     private void handleNDAT(DatagramPacket receivePacket) {
         DatabaseConnector dbc = new DatabaseConnector();
-        System.out.println(new String(receivePacket.getData().toString()));
         String[] messageParts = new String(receivePacket.getData()).split(" ");
 
         // extract NetID
@@ -80,16 +79,27 @@ public class MessageHandler implements Runnable {
             String servingDSIP = dbc.lookupDSservingNetID(NetID);
             if (servingDSIP.equals("error")) {
                 // a DS that serves the specified NetID was not found, drop packet
-            }
-            else {
+                return;
+            } else {
                 // a DS was found, forward the message to that in DDAT format
+                String message = "ddat " + NetID + " " + messageParts[2].trim();
+                try {
+                    DatagramSocket sendSocket = new DatagramSocket(SENDPORT);
+                    DatagramPacket sendPacket = new DatagramPacket(message.getBytes(), message.length(), InetAddress.getByName(servingDSIP), 3001);
+                    sendSocket.send(sendPacket);
+                } catch (SocketException e) {
+                    e.printStackTrace();
+                } catch (UnknownHostException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-        }
-        else {
-            // forward to matched NS
+        } else {
+            // forward to matched NS served by this DS
             try {
                 DatagramSocket sendSocket = new DatagramSocket(SENDPORT);
-                DatagramPacket sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), InetAddress.getByAddress(IP.getBytes()), 6665);
+                DatagramPacket sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), InetAddress.getByName(IP), 6665);
                 sendSocket.send(sendPacket);
             } catch (SocketException e) {
                 e.printStackTrace();
@@ -99,10 +109,6 @@ public class MessageHandler implements Runnable {
                 e.printStackTrace();
             }
         }
-        // forward to it if yes
-        // check if a collaborating DS is serving the target NS
-        // forward to that DS if found
-        // if NetID can't be found, drop packet
     }
 
     private void handleDCTR(DatagramPacket receivePacket) {
@@ -135,8 +141,7 @@ public class MessageHandler implements Runnable {
         else {
             // neither start nor stop, error
         }
-
-
+        sendDINF();
     }
 
     private void handleDINF(DatagramPacket receivePacket) {
@@ -157,7 +162,6 @@ public class MessageHandler implements Runnable {
     }
 
     private void handleDDAT(DatagramPacket receivePacket) {
-        System.out.println("Data from DS");
         DatabaseConnector dbc = new DatabaseConnector();
 
         // extract NetID
@@ -190,5 +194,11 @@ public class MessageHandler implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void sendDINF() {
+        // get list of NetIDs served by this DS
+        // get list of collaborating DSs
+        // send NetID list to every DS in DINF format
     }
 }
