@@ -75,12 +75,29 @@ public class MessageHandler implements Runnable {
         String NetID = messageParts[1];
         // check if the target NS is served here
         String IP = dbc.lookupNSIPaddr(NetID);
-        if (!IP.equals("error")) {
+        if (IP.equals("error")) {
             // NS not served by this DS, check if a collaborating DS is serving it.
+            String servingDSIP = dbc.lookupDSservingNetID(NetID);
+            if (servingDSIP.equals("error")) {
+                // a DS that serves the specified NetID was not found, drop packet
+            }
+            else {
+                // a DS was found, forward the message to that in DDAT format
+            }
         }
         else {
             // forward to matched NS
-
+            try {
+                DatagramSocket sendSocket = new DatagramSocket(SENDPORT);
+                DatagramPacket sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), InetAddress.getByAddress(IP.getBytes()), 6665);
+                sendSocket.send(sendPacket);
+            } catch (SocketException e) {
+                e.printStackTrace();
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         // forward to it if yes
         // check if a collaborating DS is serving the target NS

@@ -84,6 +84,7 @@ public class DatabaseConnector {
             IP = rs.getString(1);
         } catch (SQLException e) {
             if(e.getMessage().equals("ResultSet closed")) {
+                System.out.println("error");
                 IP = "error";
             }
         }
@@ -138,5 +139,13 @@ public class DatabaseConnector {
                 e.printStackTrace();
             }
         }
+    }
+
+    // searches in the DB for the DS serving a specific NS
+    // if an appropriate DS is found, this returns the DS's IP address
+    public String lookupDSservingNetID(String NetID) {
+        String DSIPaddr = "error";
+
+        return DSIPaddr;
     }
 }
