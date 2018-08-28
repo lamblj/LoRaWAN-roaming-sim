@@ -191,7 +191,7 @@ public class MessageHandler implements Runnable {
             String[] messageparts = new String(receivePacket.getData()).split(" ");
             int port = 0;
             if (messageparts[0].equals("dctr")) {
-                port = 3002;
+                port = 3001;
             }
             else {
                 port = receivePacket.getPort();
@@ -199,6 +199,7 @@ public class MessageHandler implements Runnable {
             DatagramPacket sendPacket = new DatagramPacket(buf, buf.length, receivePacket.getAddress(), port);
             sendSocket.send(sendPacket);
             sendSocket.close();
+            System.out.println("confirm message sent to " + receivePacket.getAddress() + port);
         } catch (SocketException e) {
             e.printStackTrace();
         } catch (IOException e) {
