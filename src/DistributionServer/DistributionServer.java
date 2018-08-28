@@ -16,13 +16,13 @@ public class DistributionServer {
     public static void main(String[] args) {
 
         // set up the receiving socket
-        InetSocketAddress receiveLocalBindPoint = new InetSocketAddress(3001);
+        // InetSocketAddress receiveLocalBindPoint = new InetSocketAddress(3001);
         try {
-            receiveSocket = new DatagramSocket(receiveLocalBindPoint);
+            receiveSocket = new DatagramSocket(3001);
         } catch (SocketException e) {
             e.printStackTrace();
         }
-        System.out.println("Binding to port " + receiveLocalBindPoint.getPort());
+        System.out.println("Binding to port 3001");
 
         // set up DS-to-DS collaboration
         String ans = "";
@@ -46,7 +46,7 @@ public class DistributionServer {
                 receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
                 receiveSocket.receive(receivePacket);
                 System.out.println("Response received");
-                String confirm = receivePacket.getData().toString().split(" ")[1].trim();
+                String confirm = new String(receivePacket.getData()).split(" ")[1].trim();
                 // if other DS approves, we save it as collaborating DS in the database
                 if (confirm.equals("allow")) {
                     System.out.println("Positive response, collaboration set up");

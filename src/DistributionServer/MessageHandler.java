@@ -188,7 +188,15 @@ public class MessageHandler implements Runnable {
         try {
             DatagramSocket sendSocket = new DatagramSocket(SENDPORT);
             byte[] buf = message.getBytes();
-            DatagramPacket sendPacket = new DatagramPacket(buf, buf.length, receivePacket.getAddress(), receivePacket.getPort());
+            String[] messageparts = new String(receivePacket.getData()).split(" ");
+            int port = 0;
+            if (messageparts[0].equals("dctr")) {
+                port = 3002;
+            }
+            else {
+                port = receivePacket.getPort();
+            }
+            DatagramPacket sendPacket = new DatagramPacket(buf, buf.length, receivePacket.getAddress(), port);
             sendSocket.send(sendPacket);
             sendSocket.close();
         } catch (SocketException e) {
