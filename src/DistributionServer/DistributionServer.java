@@ -36,9 +36,9 @@ public class DistributionServer {
 
             try {
                 // send collab. start request
-                DatagramSocket sendSocket = new DatagramSocket();
+                DatagramSocket sendSocket = new DatagramSocket(3002);
                 byte[] msg = "dctr start".getBytes();
-                DatagramPacket sendPacket = new DatagramPacket(msg, msg.length, Inet4Address.getByAddress(collabDS.getBytes()), 3001);
+                DatagramPacket sendPacket = new DatagramPacket(msg, msg.length, Inet4Address.getByName(collabDS), 3001);
                 sendSocket.send(sendPacket);
                 System.out.println("Request sent to other DS");
                 // receive response to start request

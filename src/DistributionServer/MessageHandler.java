@@ -124,10 +124,12 @@ public class MessageHandler implements Runnable {
 
             // save data
             dbc.saveDSregistration(DSIPaddr);
-            System.out.println("DS with IP " + DSIPaddr + " registered for collaboration.");
+
 
             // send confirm
             sendConfirm("dctr allow");
+
+            System.out.println("DS with IP " + DSIPaddr + " registered for collaboration.");
         }
         // if it is a stop request
         else if (cmd.equals("stop")) {
