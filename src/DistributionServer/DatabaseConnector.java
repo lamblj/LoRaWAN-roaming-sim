@@ -123,7 +123,9 @@ public class DatabaseConnector {
             rs.next();
             iID = rs.getString(1);
         } catch (SQLException e) {
+            // a DS that is not registered for roaming sent the message
             e.printStackTrace();
+            return;
         }
 
         // delete every currently registered NS associated with the DS
@@ -132,6 +134,10 @@ public class DatabaseConnector {
             statement.executeUpdate(query);
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+
+        if (NetIDs.size() == 0) {
+            return;
         }
 
         // add every NetID as registered with the DS
@@ -154,10 +160,38 @@ public class DatabaseConnector {
         try {
             ResultSet rs = statement.executeQuery(query);
             rs.next();
-            DSIPaddr = rs.getString(1);
+            DSIPaddr = rs.getString(2);
         } catch (SQLException e) {
 
         }
         return DSIPaddr;
+    }
+
+    public List<String> getNSregistrations() {
+        LinkedList<String> NetIDs = new LinkedList<>();
+        query = "select NSNetID from NSregistrations;";
+        try {
+            ResultSet rs = statement.executeQuery(query);
+            while (rs.next()) {
+                NetIDs.add(rs.getString(1));
+            }
+        } catch (SQLException e) {
+
+        }
+        return NetIDs;
+    }
+
+    public List<String> getDSregistrations() {
+        LinkedList<String> DSIPs = new LinkedList<>();
+        query = "select DSIPaddr from DSregistrations;";
+        try {
+            ResultSet rs = statement.executeQuery(query);
+            while (rs.next()) {
+                DSIPs.add(rs.getString(1));
+            }
+        } catch (SQLException e) {
+
+        }
+        return DSIPs;
     }
 }

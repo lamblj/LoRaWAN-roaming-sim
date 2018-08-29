@@ -34,9 +34,10 @@ public class DistributionServer {
             System.out.println("Provide IP address of other DS: ");
             collabDS = scanner.next();
 
+            DatagramSocket sendSocket = null;
             try {
                 // send collab. start request
-                DatagramSocket sendSocket = new DatagramSocket(3002);
+                sendSocket = new DatagramSocket(3002);
                 byte[] msg = "dctr start".getBytes();
                 DatagramPacket sendPacket = new DatagramPacket(msg, msg.length, Inet4Address.getByName(collabDS), 3001);
                 sendSocket.send(sendPacket);
@@ -65,6 +66,8 @@ public class DistributionServer {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                sendSocket.close();
             }
         }
         else if (ans.equals("n")) {

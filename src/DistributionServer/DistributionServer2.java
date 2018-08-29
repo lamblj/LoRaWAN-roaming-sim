@@ -4,43 +4,111 @@ import java.io.IOException;
 import java.net.*;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Scanner;
 
-public class MessageHandler implements Runnable {
+public class DistributionServer2 {
 
-    private DatagramPacket receivePacket;
-    private final int SENDPORT = 3002;
-    private DatagramSocket sendSocket;
+    private static DatagramSocket receiveSocket;
+    private static DatagramSocket sendSocket;
+    private static DatagramPacket receivePacket;
+    private static byte[] receiveBuffer;
 
-    public MessageHandler(DatagramPacket receivePacket) {
-        this.receivePacket = receivePacket;
+    private static String collabDS;
+
+    public static void main(String[] args) {
+
+        // set up sockets
         try {
-            sendSocket = new DatagramSocket(SENDPORT);
+            receiveSocket = new DatagramSocket(3001);
+            sendSocket = new DatagramSocket(3002);
+            System.out.println("Sockets successfully set up.");
         } catch (SocketException e) {
             e.printStackTrace();
+            return;
+        }
+
+        // set up DS-to-DS collaboration
+        String ans = "";
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Should the server initiate collaboration with another DS? (y/n)");
+        ans = scanner.next();
+        if (ans.equals("y")) {
+            // collect IP of collaborating DS from user
+            System.out.println("Provide IP address of other DS: ");
+            collabDS = scanner.next();
+
+            try {
+                // send collab. start request
+                byte[] msg = "dctr start".getBytes();
+                DatagramPacket sendPacket = new DatagramPacket(msg, msg.length, Inet4Address.getByName(collabDS), 3001);
+                sendSocket.send(sendPacket);
+                System.out.println("Request sent to other DS");
+                // receive response to start request
+                receiveBuffer = new byte[65507];
+                receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
+                receiveSocket.receive(receivePacket);
+                System.out.println("Response received");
+                String confirm = new String(receivePacket.getData()).split(" ")[1].trim();
+                // if other DS approves, we save it as collaborating DS in the database
+                if (confirm.equals("allow")) {
+                    System.out.println("Positive response, collaboration set up");
+                    // save to db
+                    DatabaseConnector dbc = new DatabaseConnector();
+                    dbc.saveDSregistration(collabDS);
+                }
+                // if other DS says no, we continue without it
+                else {
+                    System.out.println("Not positive response, collaboration not set up");
+                }
+            } catch (SocketException e) {
+                e.printStackTrace();
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        else if (ans.equals("n")) {
+            System.out.println("Continuing without setting up collaboration");
+        }
+        else {
+            System.out.println("Invalid response, continuing without setting up collaboration");
+        }
+        System.out.println("Distribution Server good to go");
+
+        // endless loop listening for and processing incoming messages
+        while (true) {
+            try {
+                // set up for receiving UDP message
+                receiveBuffer = new byte[65507];
+                receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
+                receiveSocket.receive(receivePacket);
+
+                // check message type
+                String messagetype = new String(receivePacket.getData()).split(" ")[0].trim();
+
+                // handle message
+                switch (messagetype) {
+                    case "ndat": handleNDAT(receivePacket);
+                        break;
+                    case "nctr": handleNCTR(receivePacket);
+                        break;
+                    case "ddat": handleDDAT(receivePacket);
+                        break;
+                    case "dctr": handleDCTR(receivePacket);
+                        break;
+                    case "dinf": handleDINF(receivePacket);
+                        break;
+                    default: System.out.println("Default");
+                        break;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    @Override
-    public void run() {
-        String messagetype = new String(receivePacket.getData()).split(" ")[0].trim();
-        switch (messagetype) {
-            case "ndat": handleNDAT(receivePacket);
-                break;
-            case "nctr": handleNCTR(receivePacket);
-                break;
-            case "ddat": handleDDAT(receivePacket);
-                break;
-            case "dctr": handleDCTR(receivePacket);
-                break;
-            case "dinf": handleDINF(receivePacket);
-                break;
-            default: System.out.println("Default");
-                break;
-        }
-        sendSocket.close();
-    }
-
-    private void handleNCTR(DatagramPacket receivePacket) {
+    private static void handleNCTR(DatagramPacket receivePacket) {
         // check if start or stop
         String[] messageParts = new String(receivePacket.getData()).split(" ");
         DatabaseConnector dbc = new DatabaseConnector();
@@ -55,7 +123,7 @@ public class MessageHandler implements Runnable {
             System.out.println("NS with ID " + NetID + ", and IP address " + NSIPaddr + " registered for roaming.");
 
             // send confirm
-            sendConfirm("nctr allow");
+            sendConfirm(receivePacket, "nctr allow");
         }
         // if it is a stop request
         else if (cmd.equals("stop")) {
@@ -64,7 +132,7 @@ public class MessageHandler implements Runnable {
             System.out.println("NS with ID " + NetID + " stopped roaming.");
 
             // send confirm
-            sendConfirm("nctr allow");
+            sendConfirm(receivePacket, "nctr allow");
         }
         else {
             // neither start nor stop, error
@@ -74,7 +142,7 @@ public class MessageHandler implements Runnable {
 
     }
 
-    private void handleNDAT(DatagramPacket receivePacket) {
+    private static void handleNDAT(DatagramPacket receivePacket) {
         DatabaseConnector dbc = new DatabaseConnector();
         String[] messageParts = new String(receivePacket.getData()).split(" ");
 
@@ -86,6 +154,7 @@ public class MessageHandler implements Runnable {
             // NS not served by this DS, check if a collaborating DS is serving it.
             String servingDSIP = dbc.lookupDSservingNetID(NetID);
             if (servingDSIP.equals("error")) {
+                System.out.println("Can't forward packet, dropping it.");
                 // a DS that serves the specified NetID was not found, drop packet
                 return;
             } else {
@@ -94,6 +163,7 @@ public class MessageHandler implements Runnable {
                 try {
                     DatagramPacket sendPacket = new DatagramPacket(message.getBytes(), message.length(), InetAddress.getByName(servingDSIP), 3001);
                     sendSocket.send(sendPacket);
+                    System.out.println("Forwarded message to DS at " + servingDSIP);
                 } catch (SocketException e) {
                     e.printStackTrace();
                 } catch (UnknownHostException e) {
@@ -117,7 +187,7 @@ public class MessageHandler implements Runnable {
         }
     }
 
-    private void handleDCTR(DatagramPacket receivePacket) {
+    private static void handleDCTR(DatagramPacket receivePacket) {
 
         // check if start or stop
         String[] messageParts = new String(receivePacket.getData()).split(" ");
@@ -133,7 +203,7 @@ public class MessageHandler implements Runnable {
             System.out.println("DS with IP " + DSIPaddr + " registered for collaboration.");
 
             // send confirm
-            sendConfirm("dctr allow");
+            sendConfirm(receivePacket, "dctr allow");
         }
         // if it is a stop request
         else if (cmd.equals("stop")) {
@@ -142,7 +212,7 @@ public class MessageHandler implements Runnable {
             System.out.println("DS with IP " + DSIPaddr + " stopped collaborating.");
 
             // send confirm
-            sendConfirm("dctr allow");
+            sendConfirm(receivePacket, "dctr allow");
         }
         else {
             // neither start nor stop, error
@@ -150,7 +220,7 @@ public class MessageHandler implements Runnable {
         sendDINF();
     }
 
-    private void handleDINF(DatagramPacket receivePacket) {
+    private static void handleDINF(DatagramPacket receivePacket) {
 
         String[] messageParts = new String(receivePacket.getData()).split(" ");
         DatabaseConnector dbc = new DatabaseConnector();
@@ -170,16 +240,16 @@ public class MessageHandler implements Runnable {
         dbc.updateRegisteredNSbyDS(DSIP, updatedNetIDs);
     }
 
-    private void handleDDAT(DatagramPacket receivePacket) {
+    private static void handleDDAT(DatagramPacket receivePacket) {
         DatabaseConnector dbc = new DatabaseConnector();
 
         // extract NetID
-        String NetID = receivePacket.getData().toString().split(" ")[1];
-        // lookup NetID in database
+        String NetID = new String(receivePacket.getData()).split(" ")[1];
+        // lookup NS IP in database
         String IP = dbc.lookupNSIPaddr(NetID);
         // forward message to matched IP
         try {
-            DatagramPacket sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), InetAddress.getByAddress(IP.getBytes()), 6665);
+            DatagramPacket sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), InetAddress.getByName(IP), 6665);
             sendSocket.send(sendPacket);
         } catch (SocketException e) {
             e.printStackTrace();
@@ -190,7 +260,7 @@ public class MessageHandler implements Runnable {
         }
     }
 
-    private void sendConfirm(String message) {
+    private static void sendConfirm(DatagramPacket receivePacket, String message) {
         try {
             byte[] buf = message.getBytes();
             String[] messageparts = new String(receivePacket.getData()).split(" ");
@@ -212,7 +282,7 @@ public class MessageHandler implements Runnable {
         }
     }
 
-    private void sendDINF() {
+    private static void sendDINF() {
         DatabaseConnector dbc = new DatabaseConnector();
 
         // get list of NetIDs served by this DS
