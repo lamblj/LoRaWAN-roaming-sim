@@ -2,6 +2,7 @@ package DistributionServer;
 
 import java.io.IOException;
 import java.net.*;
+import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
@@ -84,6 +85,10 @@ public class DistributionServer2 {
                 receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
                 receiveSocket.receive(receivePacket);
 
+                System.out.println("\n*************************");
+                System.out.println("* MESSAGE RECEIVED");
+                System.out.println("* CONTENT: " + new String(receivePacket.getData()).trim());
+                System.out.println("* AT: " + LocalDateTime.now().toString());
                 // check message type
                 String messagetype = new String(receivePacket.getData()).split(" ")[0].trim();
 
@@ -109,61 +114,70 @@ public class DistributionServer2 {
     }
 
     private static void handleNCTR(DatagramPacket receivePacket) {
+
         // check if start or stop
         String[] messageParts = new String(receivePacket.getData()).split(" ");
         DatabaseConnector dbc = new DatabaseConnector();
 
         String cmd = messageParts[1].trim();
-        String NetID = messageParts[2].trim();
+        String sourceNetID = messageParts[2].trim();
+        System.out.println("* FROM: NS " + sourceNetID);
         // if it is a start request
         if (cmd.equals("start")){
+            System.out.println("* TYPE: NCTR START");
             String NSIPaddr = receivePacket.getAddress().getHostAddress();
             // save data
-            dbc.saveNSregistration(NetID, NSIPaddr);
-            System.out.println("NS with ID " + NetID + ", and IP address " + NSIPaddr + " registered for roaming.");
+            dbc.saveNSregistration(sourceNetID, NSIPaddr);
+            System.out.println("* RESULT: NS registered for roaming");
 
             // send confirm
             sendConfirm(receivePacket, "nctr allow");
         }
         // if it is a stop request
         else if (cmd.equals("stop")) {
+            System.out.println("* TYPE: NCTR STOP");
             // delete data
-            dbc.deleteNSregistration(NetID);
-            System.out.println("NS with ID " + NetID + " stopped roaming.");
+            dbc.deleteNSregistration(sourceNetID);
+            System.out.println("* RESULT: NS stopped roaming");
 
             // send confirm
             sendConfirm(receivePacket, "nctr allow");
         }
         else {
+            System.out.println("* RESULT: error");
             // neither start nor stop, error
         }
         // send update to collaborating DSs in DINF format
         sendDINF();
-
     }
 
     private static void handleNDAT(DatagramPacket receivePacket) {
+        System.out.println("* TYPE: NDAT");
         DatabaseConnector dbc = new DatabaseConnector();
         String[] messageParts = new String(receivePacket.getData()).split(" ");
 
         // extract NetID
-        String NetID = messageParts[1];
+        String targetNetID = messageParts[1];
+        System.out.println("* TARGET: NS " + targetNetID);
         // check if the target NS is served here
-        String IP = dbc.lookupNSIPaddr(NetID);
+        String IP = dbc.lookupNSIPaddr(targetNetID);
         if (IP.equals("error")) {
+            System.out.println("* INTERMEDIATE: target NS not served by this DS");
             // NS not served by this DS, check if a collaborating DS is serving it.
-            String servingDSIP = dbc.lookupDSservingNetID(NetID);
+            String servingDSIP = dbc.lookupDSservingNetID(targetNetID);
             if (servingDSIP.equals("error")) {
-                System.out.println("Can't forward packet, dropping it.");
+                System.out.println("* INTERMEDIATE: a DS serving this NS could not be found");
+                System.out.println("* RESULT: dropping message");
                 // a DS that serves the specified NetID was not found, drop packet
                 return;
             } else {
                 // a DS was found, forward the message to that in DDAT format
-                String message = "ddat " + NetID + " " + messageParts[2].trim();
+                System.out.println("* INTERMEDIATE: a DS serving this NS was found");
+                String message = "ddat " + targetNetID + " " + messageParts[2].trim();
                 try {
                     DatagramPacket sendPacket = new DatagramPacket(message.getBytes(), message.length(), InetAddress.getByName(servingDSIP), 3001);
                     sendSocket.send(sendPacket);
-                    System.out.println("Forwarded message to DS at " + servingDSIP);
+                    System.out.println("* RESULT: forwarded message to DS at " + servingDSIP);
                 } catch (SocketException e) {
                     e.printStackTrace();
                 } catch (UnknownHostException e) {
@@ -173,10 +187,12 @@ public class DistributionServer2 {
                 }
             }
         } else {
+            System.out.println("* INTERMEDIATE: target NS is served by this DS");
             // forward to matched NS served by this DS
             try {
                 DatagramPacket sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), InetAddress.getByName(IP), 6665);
                 sendSocket.send(sendPacket);
+                System.out.println("* RESULT: forwarded message to NS " + targetNetID);
             } catch (SocketException e) {
                 e.printStackTrace();
             } catch (UnknownHostException e) {
@@ -197,30 +213,34 @@ public class DistributionServer2 {
         String DSIPaddr = receivePacket.getAddress().getHostAddress();
         // if it is a start request
         if (cmd.equals("start")){
-
+            System.out.println("* TYPE: DCTR START");
             // save data
             dbc.saveDSregistration(DSIPaddr);
-            System.out.println("DS with IP " + DSIPaddr + " registered for collaboration.");
+            System.out.println("* RESULT: DS registered for collaboration.");
 
             // send confirm
             sendConfirm(receivePacket, "dctr allow");
         }
         // if it is a stop request
         else if (cmd.equals("stop")) {
+            System.out.println("* TYPE: DCTR STOP");
             // delete data
             dbc.deleteDSregistration(DSIPaddr);
-            System.out.println("DS with IP " + DSIPaddr + " stopped collaborating.");
+            System.out.println("* RESULT: DS stopped collaborating.");
 
             // send confirm
             sendConfirm(receivePacket, "dctr allow");
         }
         else {
             // neither start nor stop, error
+            System.out.println("* INTERMEDIATE: invalid command");
+            System.out.println("* RESULT: dropping message");
         }
         sendDINF();
     }
 
     private static void handleDINF(DatagramPacket receivePacket) {
+        System.out.println("* TYPE: DINF");
 
         String[] messageParts = new String(receivePacket.getData()).split(" ");
         DatabaseConnector dbc = new DatabaseConnector();
@@ -229,7 +249,7 @@ public class DistributionServer2 {
         // get IP of DS that is sending the update
         String DSIP = receivePacket.getAddress().getHostAddress();
 
-        System.out.println("DINF from " + DSIP);
+        System.out.println("* FROM: DS at " + DSIP);
         // get list of NetIDs from packet
         if (messageParts.length > 1) {
             for (int i = 1; i < messageParts.length; i++) {
@@ -238,19 +258,24 @@ public class DistributionServer2 {
         }
         // apply DB updates
         dbc.updateRegisteredNSbyDS(DSIP, updatedNetIDs);
+        System.out.println("* RESULT: updates saved to DB");
     }
 
     private static void handleDDAT(DatagramPacket receivePacket) {
+        System.out.println("* TYPE: DDAT");
         DatabaseConnector dbc = new DatabaseConnector();
 
+        System.out.println("* FROM: DS at " + receivePacket.getAddress());
         // extract NetID
         String NetID = new String(receivePacket.getData()).split(" ")[1];
+        System.out.println("* TARGET: NS " + NetID);
         // lookup NS IP in database
         String IP = dbc.lookupNSIPaddr(NetID);
         // forward message to matched IP
         try {
             DatagramPacket sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), InetAddress.getByName(IP), 6665);
             sendSocket.send(sendPacket);
+            System.out.println("* RESULT: message forwarded to " + NetID);
         } catch (SocketException e) {
             e.printStackTrace();
         } catch (UnknownHostException e) {
@@ -274,7 +299,7 @@ public class DistributionServer2 {
             DatagramPacket sendPacket = new DatagramPacket(buf, buf.length, receivePacket.getAddress(), port);
             sendSocket.send(sendPacket);
 
-            System.out.println("confirm message sent to " + receivePacket.getAddress() + port);
+            System.out.println("* CONFIRM: sent to " + receivePacket.getAddress() + port);
         } catch (SocketException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -299,16 +324,22 @@ public class DistributionServer2 {
             return;
         }
 
+        System.out.println("\n*************************");
+        System.out.println("* SENDING DINF");
+        System.out.println("* #NSs: " + NetIDs.size());
+
         // send NetID list to every DS in DINF format
         String message = "dinf ";
         for (String s : NetIDs) {
-            message += " " + s;
+            message += s + " ";
         }
+        message.trim();
         byte[] buf = message.getBytes();
         for (String s : DSIPs) {
             try {
                 DatagramPacket sendPacket = new DatagramPacket(buf, buf.length, InetAddress.getByName(s), 3001);
                 sendSocket.send(sendPacket);
+                System.out.println("* TO: DS at " + s);
             } catch (UnknownHostException e) {
                 e.printStackTrace();
             } catch (IOException e) {
