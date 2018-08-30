@@ -269,16 +269,21 @@ public class DistributionServer {
     private static void handleDDAT(DatagramPacket receivePacket) {
         System.out.println("* TYPE: DDAT");
         DatabaseConnector dbc = new DatabaseConnector();
-
         System.out.println("* FROM: DS at " + receivePacket.getAddress());
+
         // extract NetID
-        String NetID = new String(receivePacket.getData()).split(" ")[1];
+        String[] messageParts = new String(receivePacket.getData()).split(" ");
+        String NetID = messageParts[1];
         System.out.println("* TARGET: NS " + NetID);
+
         // lookup NS IP in database
         String IP = dbc.lookupNSIPaddr(NetID);
+
         // forward message to matched IP
+        // should only forward target NetID space LoRaWAN data
+        String message = messageParts[1] + " " + messageParts[2];
         try {
-            DatagramPacket sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), InetAddress.getByName(IP), 6665);
+            DatagramPacket sendPacket = new DatagramPacket(message.getBytes(), message.length(), InetAddress.getByName(IP), 6665);
             sendSocket.send(sendPacket);
             System.out.println("* RESULT: message forwarded to " + NetID);
         } catch (SocketException e) {
