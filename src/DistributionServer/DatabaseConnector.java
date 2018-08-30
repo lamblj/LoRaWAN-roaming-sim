@@ -194,4 +194,12 @@ public class DatabaseConnector {
         }
         return DSIPs;
     }
+
+    public void close() {
+        try {
+            dbConnection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }

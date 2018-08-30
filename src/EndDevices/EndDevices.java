@@ -72,7 +72,7 @@ public class EndDevices {
                    delay = 53;
                }
 
-                timer.schedule(new MessageHandler(this.msg), delay + new Random().nextInt(40) * 1000);
+                timer.schedule(new MessageHandler(this.msg), (delay + new Random().nextInt(40)) * 1000);
                 Thread.currentThread().interrupt();
 
             }
