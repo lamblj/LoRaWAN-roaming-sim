@@ -77,9 +77,9 @@ public class DistributionServer {
         }
         System.out.println("Distribution Server good to go");
 
-        // loop for 6 hours listening for and processing incoming messages
+        // loop for 6 hours listening for and processing incoming messages 21600000
         int processedMessages = 0;
-        long endTime = System.currentTimeMillis() + 21600000;
+        long endTime = System.currentTimeMillis() + 300000;
         while (System.currentTimeMillis() < endTime) {
             try {
                 // set up for receiving UDP message
@@ -195,7 +195,8 @@ public class DistributionServer {
             System.out.println("* INTERMEDIATE: target NS is served by this DS");
             // forward to matched NS served by this DS
             try {
-                DatagramPacket sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), InetAddress.getByName(IP), 6665);
+                String message = messageParts[1] + " " + messageParts[2];
+                DatagramPacket sendPacket = new DatagramPacket(message.getBytes(), message.length(), InetAddress.getByName(IP), 6665);
                 sendSocket.send(sendPacket);
                 System.out.println("* RESULT: forwarded message to NS " + targetNetID);
             } catch (SocketException e) {
