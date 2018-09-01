@@ -11,10 +11,12 @@ public class NetworkServer {
     private String networkID;
     private byte[] buf;
     private String ipAddress;
-
-    public NetworkServer(String ipAddress, String networkID) {
+    private int messagesHandled;
+    private String gatewayIP;
+    public NetworkServer(String ipAddress, String networkID, String gatewayIP) {
         this.networkID = networkID;
         this.ipAddress = ipAddress;
+        this.gatewayIP = gatewayIP;
 
     }
     //NSCTR for command messages; Start netID or Stop netID commands
@@ -45,8 +47,9 @@ public class NetworkServer {
 
 
 
+        long endTime = System.currentTimeMillis() + 21600*1000;
         /* Endless loop waiting for client connections */
-        while (true) {
+        while (System.currentTimeMillis() < endTime) {
             buf = new byte[BUFSIZE];
             packet = new DatagramPacket(buf,buf.length);
             /* Open new thread for each new client connection */
@@ -54,8 +57,10 @@ public class NetworkServer {
             new Thread(new MessageHandler(packet, InetAddress.getByName(ipAddress), networkID,socket)).start();
         }
 
-
+        System.out.println("Amount of messages handled from the gateway: " + messagesHandled);
     }
+
+
 
 
     public void Initialize()  {
@@ -92,23 +97,35 @@ public class NetworkServer {
 
         public void Handle(DatagramPacket packet) {
             //    try {
-            if (isLocal(new String(packet.getData()).substring(0, 12)) ) {
-                  System.out.println("Packet was not roaming, therefore it is not sent forwards");
-            }
-            else {
-                try {
 
-                    String dsFormat ="ndat " + (new String(packet.getData()));
-                    System.out.println("Packet data : " +dsFormat);
-                    packet.setData(dsFormat.getBytes());
-                    packet.setPort(DSport);
-                    packet.setAddress(distributionServer);
-                    socket.send(packet);
-                    Thread.currentThread().interrupt();
-                } catch (IOException e) {
-                    e.printStackTrace();
+            try {
+                if(packet.getAddress().equals(InetAddress.getByName(gatewayIP))){
+
+                    messagesHandled++;
+
                 }
 
+
+                if (isLocal(new String(packet.getData()).substring(0, 12)) ) {
+                      System.out.println("Packet was not roaming, therefore it is not sent forwards");
+                }
+                else {
+                    try {
+
+                        String dsFormat ="ndat " + (new String(packet.getData()));
+                        System.out.println("Packet data : " +dsFormat);
+                        packet.setData(dsFormat.getBytes());
+                        packet.setPort(DSport);
+                        packet.setAddress(distributionServer);
+                        socket.send(packet);
+                        Thread.currentThread().interrupt();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
             }
 
             //} //catch (SocketException e) {
