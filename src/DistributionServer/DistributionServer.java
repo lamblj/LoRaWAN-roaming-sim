@@ -77,8 +77,10 @@ public class DistributionServer {
         }
         System.out.println("Distribution Server good to go");
 
-        // endless loop listening for and processing incoming messages
-        while (true) {
+        // loop for 6 hours listening for and processing incoming messages
+        int processedMessages = 0;
+        long endTime = System.currentTimeMillis() + 21600000;
+        while (System.currentTimeMillis() < endTime) {
             try {
                 // set up for receiving UDP message
                 receiveBuffer = new byte[65507];
@@ -89,6 +91,7 @@ public class DistributionServer {
                 System.out.println("* MESSAGE RECEIVED");
                 System.out.println("* CONTENT: " + new String(receivePacket.getData()).trim());
                 System.out.println("* AT: " + LocalDateTime.now().toString());
+                processedMessages++;
                 // check message type
                 String messagetype = new String(receivePacket.getData()).split(" ")[0].trim();
 
@@ -111,6 +114,7 @@ public class DistributionServer {
                 e.printStackTrace();
             }
         }
+        System.out.println("Total number of roaming messages processed: " + processedMessages);
     }
 
     private static void handleNCTR(DatagramPacket receivePacket) {
