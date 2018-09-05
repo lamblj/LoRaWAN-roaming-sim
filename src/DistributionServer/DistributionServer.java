@@ -77,9 +77,9 @@ public class DistributionServer {
         }
         System.out.println("Distribution Server good to go");
 
-        // loop for 6 hours listening for and processing incoming messages 21600000
+        // loop for 70 minutes listening for and processing incoming messages
         int processedMessages = 0;
-        long endTime = System.currentTimeMillis() + 300000;
+        long endTime = System.currentTimeMillis() + 4200000 ;
         while (System.currentTimeMillis() < endTime) {
             try {
                 // set up for receiving UDP message
