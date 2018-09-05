@@ -12,8 +12,10 @@ public class NetworkServerMain {
         String ipAddr = sc.next();
         System.out.println("Write the network ID of the Network Server (12 Symbols): ");
         String networkId = sc.next();
-//        NetworkServer ns = new NetworkServer(ipAddr, networkId);
-//        ns.Initialize();
+        System.out.println("Write the gateway address for packet counter:");
+        String gwip = sc.next();
+      NetworkServer ns = new NetworkServer(ipAddr, networkId, gwip);
+      ns.Initialize();
     }
 }
 
