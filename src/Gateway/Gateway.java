@@ -8,12 +8,11 @@ public class Gateway {
 
     private final int BUFSIZE = 1024;
     private String ipAddress;
-    private int sendPort;
+    private int sendPort = 6665;
     private int MYPORT = 4445;
     byte[] buf = new byte[BUFSIZE];
 
-    public Gateway( String ipAddress, int sendPort) {
-        this.sendPort = sendPort;
+    public Gateway( String ipAddress) {
         this.ipAddress = ipAddress;
     }
 
@@ -22,6 +21,7 @@ public class Gateway {
             /* Create Socket */
             DatagramSocket socket = new DatagramSocket(MYPORT);
             DatagramPacket packet = new DatagramPacket(buf, buf.length);
+            System.out.println("Gateway is running and listening for connections");
             /* Endless loop waiting for client connections */
             while (true) {
                 /* Open new thread for each new client connection */

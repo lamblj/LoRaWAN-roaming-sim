@@ -10,17 +10,16 @@ public class EndDevices {
     private Random rando = new Random();
     private final int BUFSIZE = 1024;
     private InetAddress address;
-    private int port;
+    private int port =4445;
     private byte[] buf = new byte[BUFSIZE];
     private ArrayList<Message> devices = new ArrayList<Message>();
     private String networkId;
     private String roamingNetworkID;
     private final double datarate=31.25;
-    public EndDevices(int amount, String ip, int port, int percentRoaming, String networkId, String roamingNetworkID) throws UnknownHostException {
+    public EndDevices(int amount, String ip, int percentRoaming, String networkId, String roamingNetworkID) throws UnknownHostException {
         this.amount = amount;
         this.percentRoaming = percentRoaming;
         this.address = InetAddress.getByName(ip);
-        this.port = port;
         this.networkId = networkId;
         this.roamingNetworkID = roamingNetworkID;
     }
