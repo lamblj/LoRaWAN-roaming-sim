@@ -15,6 +15,7 @@ public class EndDevices {
     private ArrayList<Message> devices = new ArrayList<Message>();
     private String networkId;
     private String roamingNetworkID;
+    private final double datarate=31.25;
     public EndDevices(int amount, String ip, int port, int percentRoaming, String networkId, String roamingNetworkID) throws UnknownHostException {
         this.amount = amount;
         this.percentRoaming = percentRoaming;
@@ -63,16 +64,11 @@ public class EndDevices {
                 Thread.currentThread().interrupt();
             } else {
                 SendData(msg);
-                int delay = 95;
-                int msglength =  msg.getData().length();
-               if(msglength <12){
-                    delay = 35;
-                }
-               else if (msglength > 12 && msglength <35){
-                   delay = 53;
-               }
 
-                timer.schedule(new MessageHandler(this.msg), (delay + new Random().nextInt(40)) * 1000);
+                int msglength =  msg.getData().length();
+                double delay = msglength/datarate;
+
+                timer.schedule(new MessageHandler(this.msg), (Math.round(delay) + new Random().nextInt(25)) * 1000);
                 Thread.currentThread().interrupt();
 
             }
@@ -102,19 +98,19 @@ public class EndDevices {
 
     private Message GenerateNonRoamingMSG(String netID) {
 
-        Message msg = new Message(netID, createText(rando.nextInt(50)));
+        Message msg = new Message(netID, createText(1+ rando.nextInt(58)));
         return msg;
     }
 
     private Message GenerateMessage(String roamingNetworkID) {
         String netID = roamingNetworkID;
 
-        Message message = new Message(netID, createText(rando.nextInt(50)));
+        Message message = new Message(netID, createText(1+ rando.nextInt(58)));
         return message;
     }
 
     private Message RefreshMessage(Message message) {
-        message.setData(createText(rando.nextInt(50)));
+        message.setData(createText( 1+ rando.nextInt(58)));
         return message;
 
 

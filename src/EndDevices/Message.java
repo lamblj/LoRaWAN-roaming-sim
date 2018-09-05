@@ -9,7 +9,7 @@ public class Message {
 
     private int currentMessages;
 
-    private int messageLimit = 70 ;
+    private int messageLimit = 240 ;
     private String data;
     private int timer;
 
