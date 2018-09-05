@@ -11,7 +11,7 @@ public class GateWayMain {
         String ipAddr = sc.next();
         System.out.println("Write the port of the Network Server");
         int port = sc.nextInt();
-        Gateway gw = new Gateway(ipAddr,port);
+        Gateway gw = new Gateway(ipAddr);
         gw.Initialize();
 
 

@@ -20,7 +20,7 @@ public class EndDeviceMain {
         System.out.println("Type the roaming network ID (12 Symbols): ");
         String roamingNetworkID = sc.next();
 
-        EndDevices devices = new EndDevices(amount,ipAddr, port, percentageRoaming,networkID, roamingNetworkID );
+        EndDevices devices = new EndDevices(amount,ipAddr, percentageRoaming,networkID, roamingNetworkID );
         devices.Initialize();
 
     }
