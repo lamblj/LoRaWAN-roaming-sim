@@ -65,9 +65,9 @@ public class EndDevices {
                 SendData(msg);
 
                 int msglength =  msg.getData().length();
-                double delay = msglength/datarate;
+                double delay = msglength/datarate ;
 
-                timer.schedule(new MessageHandler(this.msg), (Math.round(delay) + new Random().nextInt(25)) * 1000);
+                timer.schedule(new MessageHandler(this.msg), ((Math.round(delay) * 100) + new Random().nextInt(25)) * 1000);
                 Thread.currentThread().interrupt();
 
             }
