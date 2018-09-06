@@ -11,7 +11,7 @@ public class NetworkServer {
     private String networkID;
     private byte[] buf;
     private String ipAddress;
-    private int messagesHandled;
+    private volatile int messagesHandled;
     private String gatewayIP;
     public NetworkServer(String ipAddress, String networkID, String gatewayIP) {
         this.networkID = networkID;
@@ -47,7 +47,7 @@ public class NetworkServer {
 
 
 
-        long endTime = System.currentTimeMillis() + 21600*1000;
+        long endTime = (System.currentTimeMillis() + 3960)*1000;
         /* Endless loop waiting for client connections */
         while (System.currentTimeMillis() < endTime) {
             buf = new byte[BUFSIZE];
@@ -100,9 +100,8 @@ public class NetworkServer {
 
             try {
                 if(packet.getAddress().equals(InetAddress.getByName(gatewayIP))){
-
-                    messagesHandled++;
-
+                    increment();
+                    System.out.println("messages handled by ns as of now: " + messagesHandled);
                 }
 
 
@@ -135,6 +134,10 @@ public class NetworkServer {
             //  System.out.println("Packet could not be sent");
             //  }
 
+        }
+
+        private synchronized void increment(){
+            messagesHandled++;
         }
 
         @Override
