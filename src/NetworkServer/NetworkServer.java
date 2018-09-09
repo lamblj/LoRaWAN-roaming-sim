@@ -22,6 +22,17 @@ public class NetworkServer {
     //NSCTR for command messages; Start netID or Stop netID commands
     //NSDAT for LoRaWAN messages
 
+    public static void main(String[] args) {
+
+        NetworkServer ns = new NetworkServer(args[0], args[1], args[2]); // IP address, networkID, gateway IP
+        ns.Initialize();
+    }
+
+
+
+
+
+
 
     private void listenService() throws IOException {
 

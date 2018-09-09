@@ -25,6 +25,15 @@ public class EndDevices {
     }
 
 
+
+    public static void main(String[] args) throws UnknownHostException {
+
+        EndDevices devices = new EndDevices(Integer.getInteger(args[0]),args[2], Integer.getInteger(args[3]),args[4], args[5] ); //Amount, IP address, Roaming %, Network ID, Roaming network ID
+        devices.Initialize();
+
+    }
+
+
     public void Initialize() {
 
         int nonRoaming = (amount * percentRoaming) / 100;

@@ -16,6 +16,17 @@ public class Gateway {
         this.ipAddress = ipAddress;
     }
 
+    public static void main(String[] args)  {
+
+
+        Gateway gw = new Gateway(args[0]); // Gateway IP
+        gw.Initialize();
+
+
+    }
+
+
+
     private void listenService() {
         try {
             /* Create Socket */
