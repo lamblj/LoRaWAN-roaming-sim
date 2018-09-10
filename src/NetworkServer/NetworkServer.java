@@ -58,7 +58,7 @@ public class NetworkServer {
 
 
 
-        long endTime = (System.currentTimeMillis() + 3960)*1000;
+        long endTime = System.currentTimeMillis() + 3600000;
         /* Endless loop waiting for client connections */
         while (System.currentTimeMillis() < endTime) {
             buf = new byte[BUFSIZE];

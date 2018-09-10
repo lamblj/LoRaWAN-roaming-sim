@@ -12,14 +12,11 @@ public class Gateway {
     private int MYPORT = 4445;
     byte[] buf = new byte[BUFSIZE];
 
-    public Gateway( String ipAddress) {
-        this.ipAddress = ipAddress;
-    }
 
     public static void main(String[] args)  {
 
 
-        Gateway gw = new Gateway(args[0]); // Gateway IP
+        Gateway gw = new Gateway(); // Gateway IP
         gw.Initialize();
 
 
@@ -38,7 +35,7 @@ public class Gateway {
                 /* Open new thread for each new client connection */
                 socket.receive(packet);
                 System.out.println("Packet data " + new String(packet.getData()));
-                new Thread(new MessageHandler(packet, InetAddress.getByName(ipAddress),socket)).start();
+                new Thread(new MessageHandler(packet, InetAddress.getByName("127.0.0.1"),socket)).start();
                 Arrays.fill(buf, (byte) 0);
             }
 
