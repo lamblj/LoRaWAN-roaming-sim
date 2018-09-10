@@ -18,6 +18,10 @@ public class DistributionServer {
 
     public static void main(String[] args) {
 
+        if(args.length > 1) {
+            System.out.println("Provide zero arguments to set up DS without collaboration, or one argument, the IP of the other DS to set up DS with collaboration");
+        }
+
         // set up sockets
         try {
             receiveSocket = new DatagramSocket(3001);
@@ -29,14 +33,15 @@ public class DistributionServer {
         }
 
         // set up DS-to-DS collaboration
-        String ans = "";
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Should the server initiate collaboration with another DS? (y/n)");
-        ans = scanner.next();
+        String ans;
+        if(args.length == 0) {
+            ans = "n";
+        }
+        else {
+            ans = "y";
+        }
         if (ans.equals("y")) {
-            // collect IP of collaborating DS from user
-            System.out.println("Provide IP address of other DS: ");
-            collabDS = scanner.next();
+            collabDS = args[0];
 
             try {
                 // send collab. start request
