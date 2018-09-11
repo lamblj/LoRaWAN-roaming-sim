@@ -45,7 +45,7 @@ public class NetworkServer {
         // try to get confirm from DS
         buf = new byte[1024];
         packet = new DatagramPacket(buf, buf.length);
-        socket.receive(packet);
+       socket.receive(packet);
         String confirm = new String(packet.getData()).trim().split(" ")[1];
         System.out.println(confirm);
         if (confirm.equals("deny")) {
@@ -58,7 +58,7 @@ public class NetworkServer {
 
 
 
-        long endTime = System.currentTimeMillis() + 3600000;
+        long endTime = System.currentTimeMillis() + 36000000;
         /* Endless loop waiting for client connections */
         while (System.currentTimeMillis() < endTime) {
             buf = new byte[BUFSIZE];

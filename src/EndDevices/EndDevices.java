@@ -16,9 +16,9 @@ public class EndDevices {
     private String networkId;
     private String roamingNetworkID;
     private final double datarate=31.25;
-    public EndDevices(int amount, String ip, int percentRoaming, String networkId, String roamingNetworkID) throws UnknownHostException {
-        this.amount = amount;
-        this.percentRoaming = percentRoaming;
+    public EndDevices(String amount, String ip, String percentRoaming, String networkId, String roamingNetworkID) throws UnknownHostException {
+        this.amount = Integer.parseInt(amount);
+        this.percentRoaming = Integer.parseInt(percentRoaming);
         this.address = InetAddress.getByName(ip);
         this.networkId = networkId;
         this.roamingNetworkID = roamingNetworkID;
@@ -27,8 +27,8 @@ public class EndDevices {
 
 
     public static void main(String[] args) throws UnknownHostException {
-
-        EndDevices devices = new EndDevices(Integer.getInteger(args[0]),args[2], Integer.getInteger(args[3]),args[4], args[5] ); //Amount, IP address, Roaming %, Network ID, Roaming network ID
+        System.out.println(args[0] + args[1] +args[2] + args[3] +args[4]);
+        EndDevices devices = new EndDevices(args[0],args[1], args[2],args[3], args[4] ); //Amount, IP address, Roaming %, Network ID, Roaming network ID
         devices.Initialize();
 
     }

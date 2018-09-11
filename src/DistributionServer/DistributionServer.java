@@ -97,6 +97,7 @@ public class DistributionServer {
                 System.out.println("* CONTENT: " + new String(receivePacket.getData()).trim());
                 System.out.println("* AT: " + LocalDateTime.now().toString());
                 processedMessages++;
+                System.out.println("* MESSAGES PROCESSED: " + processedMessages);
                 // check message type
                 String messagetype = new String(receivePacket.getData()).split(" ")[0].trim();
 
